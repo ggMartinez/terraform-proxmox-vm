@@ -1,0 +1,19 @@
+---
+  - name: Install Epel
+    yum:
+      name: epel-release
+
+  - name: Install base packages
+    yum:
+      name:
+        - git
+        - vim
+        - telnet
+        - mlocate
+        - net-tools
+        - iptables-services
+        - wget
+        - parted
+
+  - name: Update system packages (yum update)
+    yum: name=* state=latest

@@ -1,27 +1,80 @@
 resource "proxmox_vm_qemu" "vm" {
-  name       = var.Name
-  vmid       = var.VmId
+  name = var.Name
+  vmid = var.VmId
   target_node = var.TargetNode
-  clone      = var.Template       # Clone from a template
+  clone = var.Template
   full_clone = var.FullClone
   os_type = "cloud-init"
-  cores   = 2
-  memory  = 2048
-  scsihw  = "virtio-scsi-pci"
-  agent   = 1
+  cpu_type = "host"
+  cores = 2
+  memory = 2048
+  scsihw = "virtio-scsi-pci"
+  agent = 1
+  sshkeys = var.SshKeys
+  ipconfig0 = "ip=${var.IpAddress}/${var.Netmask},gw=${var.Gateway}"
 
-  disk {
-    size    = var.DiskSize
-    storage = var.DiskStorage
-    slot = "scsi1"
+  serial {
+    id = 0
+  }
+
+  disks {
+    scsi {
+      scsi0 {
+        disk {
+          storage = var.DiskStorage
+          size = var.DiskSize
+        }
+      }
+    }
+    ide {
+      ide1 {
+        cloudinit {
+          storage = var.DiskStorage
+        }
+      }
+    }
   }
 
   network {
-    model  = "virtio"
+    id = 0
     bridge = "vmbr0"
+    model = "virtio"
   }
 
+  provisioner "local-exec" {
+    command = (
+        format(
+          "%s %s %s",
+              var.ProvisionAnsible ? <<-EOT
+                export ANSIBLE_HOST_KEY_CHECKING=False
+                cd ${path.module}/Ansible
+                sleep 45
+                ANSIBLE_FORCE_COLOR=True \
+                  ansible-playbook \
+                    -u ${var.RemoteUser} \
+                    -i '${self.default_ipv4_address},' \
+                    --ssh-common-args="-o StrictHostKeyChecking=no" \
+                    --private-key /tmp/id_rsa \
+                    -e "ProvisionDocker=${var.ProvisionDocker}" \
+                    ${var.ProvisionAnsibleBaseFile}
+                EOT
+              :
+              "",
+              var.ProvisionAnsible ? <<-EOT
+                   %{ for file in var.ProvisionAnsibleCustom ~}
+                     ANSIBLE_FORCE_COLOR=True \
+                     ansible-playbook \
+                      -u ${var.RemoteUser} \
+                      -i '${self.default_ipv4_address},' \
+                      --ssh-common-args="-o StrictHostKeyChecking=no" \
+                      --private-key /tmp/id_rsa \
+                      ${file}
 
-  ipconfig0 = "ip=${var.IpAddress}/${var.Netmask},gw=${var.Gateway}"  # Use cloud-init configuration for networking
-  ssh_user = "root"
+                   %{ endfor }
+              EOT
+              :
+              ""
+        )
+    )
+  }
 }

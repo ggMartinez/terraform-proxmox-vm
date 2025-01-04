@@ -1,0 +1,13 @@
+---
+- hosts: all
+  tasks:
+
+    - include_tasks: Playbooks/Packages.yml
+    - include_tasks: Playbooks/Timezone.yml
+    - include_tasks: Playbooks/Prometheus.yml
+    - include_tasks: Playbooks/Docker.yml
+      when: ProvisionDocker != "No"
+
+
+  become: true
+  become_user: root

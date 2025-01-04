@@ -1,0 +1,12 @@
+---
+
+  - name: Install Prometheus Node Exporter
+    yum:
+      name:
+        - golang-github-prometheus-node-exporter
+
+  - name: Enable Prometheus Node Exporter
+    systemd:
+      state: started
+      enabled: yes
+      name: prometheus-node-exporter
