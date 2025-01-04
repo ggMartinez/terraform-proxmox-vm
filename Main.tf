@@ -44,36 +44,36 @@ resource "proxmox_vm_qemu" "vm" {
   provisioner "local-exec" {
     command = (
         format(
-          "%s %s %s",
-              var.ProvisionAnsible ? <<-EOT
-                export ANSIBLE_HOST_KEY_CHECKING=False
-                cd ${path.module}/Ansible
-                sleep 45
-                ANSIBLE_FORCE_COLOR=True \
+          "%s %s",
+          var.ProvisionAnsible ? <<-EOT
+            export ANSIBLE_HOST_KEY_CHECKING=False
+            cd ${path.module}/Ansible
+            sleep 45
+            ANSIBLE_FORCE_COLOR=True \
+              ansible-playbook \
+                -u ${var.RemoteUser} \
+                -i '${self.default_ipv4_address},' \
+                --ssh-common-args="-o StrictHostKeyChecking=no" \
+                --private-key /tmp/id_rsa \
+                -e "ProvisionDocker=${var.ProvisionDocker}" \
+                ${var.ProvisionAnsibleBaseFile}
+            EOT
+          :
+          "",
+          var.ProvisionAnsible ? <<-EOT
+                %{ for file in var.ProvisionAnsibleCustom ~}
+                  ANSIBLE_FORCE_COLOR=True \
                   ansible-playbook \
-                    -u ${var.RemoteUser} \
-                    -i '${self.default_ipv4_address},' \
-                    --ssh-common-args="-o StrictHostKeyChecking=no" \
-                    --private-key /tmp/id_rsa \
-                    -e "ProvisionDocker=${var.ProvisionDocker}" \
-                    ${var.ProvisionAnsibleBaseFile}
-                EOT
-              :
-              "",
-              var.ProvisionAnsible ? <<-EOT
-                   %{ for file in var.ProvisionAnsibleCustom ~}
-                     ANSIBLE_FORCE_COLOR=True \
-                     ansible-playbook \
-                      -u ${var.RemoteUser} \
-                      -i '${self.default_ipv4_address},' \
-                      --ssh-common-args="-o StrictHostKeyChecking=no" \
-                      --private-key /tmp/id_rsa \
-                      ${file}
+                  -u ${var.RemoteUser} \
+                  -i '${self.default_ipv4_address},' \
+                  --ssh-common-args="-o StrictHostKeyChecking=no" \
+                  --private-key /tmp/id_rsa \
+                  ${file}
 
-                   %{ endfor }
-              EOT
-              :
-              ""
+                %{ endfor }
+          EOT
+          :
+          ""
         )
     )
   }
