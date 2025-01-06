@@ -12,7 +12,7 @@ resource "proxmox_vm_qemu" "vm" {
   agent = 1
   sshkeys = var.SshKeys
   ipconfig0 = "ip=${var.IpAddress}/${var.Netmask},gw=${var.Gateway}"
-  tags = var.CustomTags ? "${var.CommonTags},${varCustomTags}" : "${var.CommonTags}"
+  tags = var.CustomTags ? "${var.CommonTags},${var.CustomTags}" : "${var.CommonTags}"
 
   serial {
     id = 0
