@@ -12,6 +12,7 @@ resource "proxmox_vm_qemu" "vm" {
   agent = 1
   sshkeys = var.SshKeys
   ipconfig0 = "ip=${var.IpAddress}/${var.Netmask},gw=${var.Gateway}"
+  tags = var.CustomTags ? "${var.CommonTags},${varCustomTags}" : "${var.CommonTags}"
 
   serial {
     id = 0
@@ -48,7 +49,7 @@ resource "proxmox_vm_qemu" "vm" {
           var.ProvisionAnsible ? <<-EOT
             export ANSIBLE_HOST_KEY_CHECKING=False
             cd ${path.module}/Ansible
-            sleep 45
+            sleep ${var.ProvisionBootWait}
             ANSIBLE_FORCE_COLOR=True \
               ansible-playbook \
                 -u ${var.RemoteUser} \

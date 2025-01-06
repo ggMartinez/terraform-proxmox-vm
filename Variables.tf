@@ -5,6 +5,8 @@ variable "Template" {default="AlmaLinux20250104"}
 variable "FullClone" {default=false}
 variable "DiskSize" {default="20G"}
 variable "DiskStorage" {default="storage"}
+variable "CommonTags" {default="linux,monitor,almalinux"}
+variable "CustomTags" {default=null}
 variable "IpAddress" {}
 variable "SshKeys" {}
 variable "Netmask" {default="24"}
@@ -17,5 +19,5 @@ variable "ProvisionAnsibleCustom" {
   type=list(string)
   default=[]
 }
-
+variable "ProvisionBootWait" {default=20}
 variable "ProvisionDocker" {default="No"}
